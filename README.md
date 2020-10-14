@@ -5,8 +5,8 @@
 ### Run server
 
 > Prerequisites:
->   Python 3.x
->   virtualenv
+> - Python 3.x
+> - virtualenv
 > 
 
 ```shell
