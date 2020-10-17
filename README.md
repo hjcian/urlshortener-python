@@ -16,7 +16,7 @@ A simple python-implemented URL shortener and some system level thinkings
   - [Current system schematic diagram](#current-system-schematic-diagram)
   - [Concerns need to be eased](#concerns-need-to-be-eased)
     - [1. 直接用 Python program 接流量？](#1-直接用-python-program-接流量)
-    - [2. online token generation 可能是效率瓶頸，如何解決？](#2-online-token-generation-可能是效率瓶頸如何解決)
+    - [2. Online token generation 可能是效率瓶頸，如何解決？](#2-online-token-generation-可能是效率瓶頸如何解決)
     - [3. DB 選用基準？](#3-db-選用基準)
     - [4. DB 的 partition 與 replication？](#4-db-的-partition-與-replication)
     - [5. 哪裡會需要 Cache layer？](#5-哪裡會需要-cache-layer)
@@ -182,33 +182,51 @@ Error responses
   > 128 * log(2) / log(62) ~= 21
 
 ## Current system schematic diagram
+- 目前實作品的處理流程，簡單來看僅有四個元件：
+    1. Client 端
+    2. App 主程式
+    3. Key generator 負責產生短網址 token
+    4. Database，負責資料儲存
+
+![](https://i.imgur.com/DYhboam.png)
+- 以上圖為基礎，底下提出幾點圖上架構尚須進一步考慮的隱憂 (紅圈數字)
 
 ## Concerns need to be eased
 ### 1. 直接用 Python program 接流量？
 - 當然不能這麼做，首先 python program 至少得先用 WSGI 帶起來，此舉還能做出 master / workers 的架構，來充分利用機器的 CPU、消弭一點 GIL 可能帶來的隱憂
     - e.g. [gunicorn](https://gunicorn.org/)
 - 實際上，面對 public 的節點適合使用成熟穩定的 web server 來處理 concurrent requests (e.g. Apache or Nginx)
-- Nginx 應會較適合此題的場景：C10K 的 concurrent requests 會是底層 even-driven 的架構較擅長
+- Nginx 應會較適合此題的場景
+    - 因 C10K 問題會在同時間有超多 connections，multi-thread process 的 apache 會因建立太多 connections 及 threads 造成硬體資源消耗過多
+    - Nginx 使用 event-driven 的底層架構，讓 user space 只靠 single thread 就能處理大量的 requests，以此來因應 C10K 問題
 - 而目前 python 的實作品即假設前面還有 web server 與 web 前端服務來處理真正的轉址行為
 
-### 2. online token generation 可能是效率瓶頸，如何解決？
-- 再獨立一支 key generation service (KGS)，負責事先產生好 6 letters keys，並儲存下來，app 需要時向它存取即可
-- 好處是 app 端不需要對 URL encode，也不用擔心 key collision 的問題了
 
-**app 為多台的 concurrency 情境，可能同個 key 被重複取得嗎？**
-- 所以 KGS 的 key pool 必須有 lock 的機制避免 multiple requests access key pool at the same time
+🆕 ***改善後的 client <---> app 示意圖***
+![](https://i.imgur.com/57Cdf8D.png)
 
-**key pool 有 lock 的話，那吞吐量如何被保證？**
-- KGS 可總是將 available keys 保存在 memory 來加速 (i.e. key pool)
-- KGS 還會需要自己一個資料庫，有兩張 tables 分別儲存 avaliable keys 與 used keys
+### 2. Online token generation 可能是效率瓶頸，如何解決？
+- 再獨立一支 token generation service (TGS)，負責事先產生好 6 letters tokens，並儲存下來，app 需要時向它存取即可
+- 好處是 app 端不需要對 URL encode，也不用擔心 token collision 的問題了
+
+**app 為多台的 concurrency 情境，可能同個 token 被重複取得嗎？**
+- 所以 TGS 的 token pool 必須有 lock 的機制避免 multiple requests access token pool at the same time
+
+**token pool 有 lock 的話，那吞吐量如何被保證？**
+- TGS 可總是將 available tokens 保存在 memory 來加速 (i.e. token pool)
+- TGS 還會需要自己一個資料庫，有兩張 tables 分別儲存 avaliable tokens 與 used tokens
     - 額外的儲存需求約 **88 GiB**
         > 15768000000 * 6 / 1024 / 1024 / 1024 ~= 88 GiB
-- 發現 key pool 沒有時再從 avaliable keys table 批次讀取儲存到 key pool
-- 當 key 被 app 取走時則將 key 儲存到 used keys table
-- app 也可選擇批次取得 keys 放到 app 的 memory 裡，減少 connection 的次數及可能被 lock 的機會來提速
+- 發現 token pool 沒有時再從 avaliable tokens table 批次讀取儲存到 token pool
+- 當 token 被 app 取走時則將 token 儲存到 used tokens table
+- app 也可選擇批次取得 tokens 放到 app 的 memory 裡，減少 connection 的次數及可能被 lock 的機會來提速
 
 **single point of failure?**
-- KGS 的 QPS 可透過 app 的批次存取來減少，故可簡單給個 standby server 等 main service 掛點時切換
+- TGS 的 QPS 可透過 app 的批次存取來減少，故可簡單給個 standby server 等 main server 掛點時切換
+
+🆕 ***改善後的 APP <---> TGS 示意圖***
+![](https://i.imgur.com/TslMCHx.png)
+
 
 ### 3. DB 選用基準？
 - SQL vs. NoSQL?
@@ -219,14 +237,16 @@ Error responses
 - 接著，可考慮再利用 replication 的支援將讀寫分離
 
 ### 5. 哪裡會需要 Cache layer？
-- 縮址還原的請求，10000 QPS 的路徑
-- 可選擇 Redis 或 Memcache
+- 縮址還原的請求，10000 QPS 的路徑上每次都去查詢 DB 會是顯而易見的瓶頸
+- 可選擇 Redis 或 Memcache 介於 APP 與 DB 之間
 - Evict strategy 使用 LRU，只 caching 最近被存取的策略符合我們的應用假設
 - :warning: 使用 Redis 時要注意，因為 Redis 是 single threaded 的架構，故 data 最好要設定 [expiration time](https://stackoverflow.com/a/36173972/8694937)，避免 Redis 在尖峰時刻處理 app 請求、卻又同時要處理大量的 eviction，造成 CPU 繁忙降低吞吐量
 - 若單台真的撐不住，則可以再進一步做 replication 分散流量，但與 app 之間就需要 LB 來導流
 - 當 cache miss 時，app 才向 DB 存取資料，然後將資料存到 cache
     - 此時可選擇是由 app 來負責直接 update cache 或尋找 DB 的功能來直接對 cache server 做 update
 
+🆕 **改善後的 APP <---> DB 示意圖**
+![](https://i.imgur.com/W3Cf2T4.png)
 
 ### 6. 那裡會需要 Load balancer？
 
@@ -242,7 +262,6 @@ Error responses
 
 ### 7. 過期資料清除策略？
 - 由背景程式在離峰時段施作
-
 
 ## References
 - learn a lot from:
