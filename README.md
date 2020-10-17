@@ -75,7 +75,7 @@ Error responses
 - (404) not found the token, maybe it is invalid or already expired
 - (500) internal error
 
-### /<token>
+### /\<token>
 - an endpoint for demostrating the redirection behavior
 ```shell
 curl --request GET \
