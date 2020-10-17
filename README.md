@@ -185,7 +185,7 @@ Error responses
 - 目前實作品的處理流程，簡單來看僅有四個元件：
     1. Client 端
     2. App 主程式
-    3. Key generator 負責產生短網址 token
+    3. Token generator 負責產生短網址 token
     4. Database，負責資料儲存
 
 ![](https://i.imgur.com/DYhboam.png)
