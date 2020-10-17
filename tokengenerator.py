@@ -8,14 +8,14 @@ TOKEN_LENGTH = 6
 # TOKEN_LENGTH is pre-computed during system design phase, 6 letters can
 # accommodate around 15 billions URLs
 
-BYTE = 8  # 8 bits
+EIGHT_BITS = 8  # 1 byte = 8 bits
 
 
 def getInterger(url):
     byte_array = hashlib.md5(url.encode()).digest()
 
     big_num = sum([
-        byte_array[i] << ((len(byte_array) - i - 1) * BYTE)
+        byte_array[i] << ((len(byte_array) - i - 1) * EIGHT_BITS)
         for i in range(len(byte_array))
     ])
 
