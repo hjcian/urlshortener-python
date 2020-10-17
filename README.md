@@ -1,8 +1,7 @@
 # URL shortener
 A simple python-implemented URL shortener and some system level thinkings
 
-## Usage
-### Installation and Run
+## Installation and Run
 
 > System Prerequisites:
 > - git
@@ -19,8 +18,8 @@ pip install -r requirements.txt
 python main.py
 ```
 
-### System APIs
-#### /shortenURL
+## System APIs
+### /shortenURL
 - shorten the given URL, return a token to frontend fir further use
 
 ```shell
@@ -43,11 +42,11 @@ Date: Sat, 17 Oct 2020 05:25:17 GMT
 }
 ```
 
-Error responses (400)
-- given nothing or field of 'url' is not a JSON string
+Error responses
+- (400) given nothing or field of 'url' is not a JSON string
+- (500) internal error
 
-
-#### /getURL
+### /getURL
 - give the token, backend will return the original URL to frontend for further use (e.g. redirect)
 - if token not exists, reply a 404 NOT FOUND
 
@@ -71,9 +70,30 @@ Date: Sat, 17 Oct 2020 05:25:32 GMT
 }
 ```
 
-Error responses (400)
-- given nothing or field of 'token' is not a JSON string
+Error responses
+- (400) given nothing or field of 'token' is not a JSON string
+- (404) not found the token, maybe it is invalid or already expired
+- (500) internal error
 
+### /<token>
+- an endpoint for demostrating the redirection behavior
+```shell
+curl --request GET \
+  --url http://127.0.0.1:12345/54e3QA
+```
+
+Successful response (302)
+```shell
+HTTP/1.0 302 FOUND
+location: http://example.com/
+Content-Type: text/html; charset=utf-8
+Content-Length: 0
+Server: Werkzeug/1.0.1 Python/3.8.2
+Date: Sat, 17 Oct 2020 09:02:06 GMT
+```
+
+Error responses
+- (404) not found the token, maybe it is invalid or already expired
 
 ## Assumptions
 - 使用者**不需要登入**就能創建短網址。也就是一個功能單純的 public service
