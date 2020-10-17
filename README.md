@@ -8,15 +8,14 @@ A simple python-implemented URL shortener and some system level thinkings
     - [/shortenURL](#shortenurl)
     - [/getURL](#geturl)
     - [/\<token>](#token)
-  - [Assumptions](#assumptions)
+  - [System Assumptions](#system-assumptions)
   - [Capacity Estimation and Constraints](#capacity-estimation-and-constraints)
   - [DB schema design](#db-schema-design)
-  - [token generation](#token-generation)
-    - [online generate](#online-generate)
-  - [Current system schematic diagram](#current-system-schematic-diagram)
+  - [Token generation strategy](#token-generation-strategy)
+  - [Fundamental system schematic diagram](#fundamental-system-schematic-diagram)
   - [Concerns need to be eased](#concerns-need-to-be-eased)
     - [1. 直接用 Python program 接流量？](#1-直接用-python-program-接流量)
-    - [2. Online token generation 可能是效率瓶頸，如何解決？](#2-online-token-generation-可能是效率瓶頸如何解決)
+    - [2. Online token generation 可能會是效率瓶頸，如何解決？](#2-online-token-generation-可能會是效率瓶頸如何解決)
     - [3. DB 選用基準？](#3-db-選用基準)
     - [4. DB 的 partition 與 replication？](#4-db-的-partition-與-replication)
     - [5. 哪裡會需要 Cache layer？](#5-哪裡會需要-cache-layer)
@@ -118,7 +117,7 @@ Date: Sat, 17 Oct 2020 09:02:06 GMT
 Error responses
 - (404) not found the token, maybe it is invalid or already expired
 
-## Assumptions
+## System Assumptions
 - 使用者**不需要登入**就能創建短網址。也就是一個功能單純的 public service
 - 讀寫流量假設為 **100:10000** (QPS)，用來估計硬體需求
 - 短網址僅儲存 **5 年** (因為硬碟雖然便宜但不是無限大，且不做 data purge 也會造成 DB 效率下降)
@@ -171,8 +170,8 @@ Error responses
 - createAt 與 deleteAt 加上 index 在後續若要做統計分析時可加速查找
 - deleteAt 上 index 在未來做 data purge 時也能避免 full table scan
 
-## token generation
-### online generate
+## Token generation strategy
+- 先使用即時的 **online generation** 方式，client 有創建請求時則即時運算產生 token
 - 短網址需要的 token 長度，假設使用 **base 62** 的方式來產生
   > base 62: 只的是使用 digits(10) + lower letters(26) + upper letters(26) 共 62 個 characters
 - 那麼 token 長度只需要 **6 位**即可
@@ -181,11 +180,11 @@ Error responses
 - 再利用此 128-bit 的 value 轉換成 base 62 的 encoded string，會有 21 個 letters，我們簡單取用前 6 位的 letters 作為 token 即可。若需要考慮衝突的情境則可再利用其他位置的 letters
   > 128 * log(2) / log(62) ~= 21
 
-## Current system schematic diagram
+## Fundamental system schematic diagram
 - 目前實作品的處理流程，簡單來看僅有四個元件：
     1. Client 端
     2. App 主程式
-    3. Token generator 負責產生短網址 token
+    3. token generator 負責產生短網址 token
     4. Database，負責資料儲存
 
 ![](https://i.imgur.com/DYhboam.png)
@@ -193,19 +192,18 @@ Error responses
 
 ## Concerns need to be eased
 ### 1. 直接用 Python program 接流量？
-- 當然不能這麼做，首先 python program 至少得先用 WSGI 帶起來，此舉還能做出 master / workers 的架構，來充分利用機器的 CPU、消弭一點 GIL 可能帶來的隱憂
+- **當然不能這麼做**，首先 python program 至少得先用 WSGI 帶起來，此舉還能做出 master / workers 的架構，來充分利用機器的 CPU、消弭一點 GIL 可能帶來的隱憂
     - e.g. [gunicorn](https://gunicorn.org/)
-- 實際上，面對 public 的節點適合使用成熟穩定的 web server 來處理 concurrent requests (e.g. Apache or Nginx)
+- 實際上，面對 public 的節點需使用成熟的 web server 來處理 concurrent requests (e.g. Apache or Nginx)
 - Nginx 應會較適合此題的場景
     - 因 C10K 問題會在同時間有超多 connections，multi-thread process 的 apache 會因建立太多 connections 及 threads 造成硬體資源消耗過多
     - Nginx 使用 event-driven 的底層架構，讓 user space 只靠 single thread 就能處理大量的 requests，以此來因應 C10K 問題
-- 而目前 python 的實作品即假設前面還有 web server 與 web 前端服務來處理真正的轉址行為
-
+- 而目前的實作品假設前面還有 web server 與 web 前端服務來處理真正的轉址行為
 
 🆕 ***改善後的 client <---> app 示意圖***
 ![](https://i.imgur.com/57Cdf8D.png)
 
-### 2. Online token generation 可能是效率瓶頸，如何解決？
+### 2. Online token generation 可能會是效率瓶頸，如何解決？
 - 再獨立一支 token generation service (TGS)，負責事先產生好 6 letters tokens，並儲存下來，app 需要時向它存取即可
 - 好處是 app 端不需要對 URL encode，也不用擔心 token collision 的問題了
 
@@ -229,7 +227,16 @@ Error responses
 
 
 ### 3. DB 選用基準？
-- SQL vs. NoSQL?
+- 考慮到 billions 數量級的儲存
+- entry 之間毫無 **relation**
+- read-heavy application
+- 故應傾向**選擇 NoSQL database**
+
+Refs:
+- [When to choose NoSQL over SQL?](https://dev.to/ombharatiya/when-to-choose-nosql-over-sql-536p)
+- [MongoDB vs MySQL: A Comparative Study on Databases](https://www.simform.com/mongodb-vs-mysql-databases/)
+- [why are noSQL databases more scalable than SQL?](https://softwareengineering.stackexchange.com/questions/194340/why-are-nosql-databases-more-scalable-than-sql)
+
 ### 4. DB 的 partition 與 replication？
 - 單台機器儲存 7.6 TiB 的資料可能有點誇張
 - 可使用 DB 應已內建的 partition 機制來做分散式儲存
