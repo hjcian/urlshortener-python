@@ -130,10 +130,10 @@ Error responses (400)
 
 ## token generation
 ### online generate
-短網址需要的 token 長度，假設使用 **base 62** 的方式來產生。
-> base 62: 指使用 digits(10) + lower letters(26) + upper letters(26) 共 62 個 characters
-那麼 token 長度只需要 **6 位**即可。
-> log(15768000000) / log(62) ~= 5.69 < min. token length = 6
-接著我們利用 hash function ，將原始網址作為 input 產生 n-bit hash value。在此簡單使用 MD5 來產生 128-bit 的 hash value。
-再利用此 128-bit 的 value 轉換成 base 62 的 encoded string，會有 21 個 letters，我們簡單取用前 6 位的 letters 作為 token 即可。
-> 128 * log(2) / log(62) ~= 21
+- 短網址需要的 token 長度，假設使用 **base 62** 的方式來產生
+  > base 62: 只的是使用 digits(10) + lower letters(26) + upper letters(26) 共 62 個 characters
+- 那麼 token 長度只需要 **6 位**即可
+  > log(15768000000) / log(62) ~= 5.69 < min. token length = 6
+- 接著我們利用 hash function ，將原始網址作為 input 產生 n-bit hash value。在此簡單使用 MD5 來產生 128-bit 的 hash value
+- 再利用此 128-bit 的 value 轉換成 base 62 的 encoded string，會有 21 個 letters，我們簡單取用前 6 位的 letters 作為 token 即可。若需要考慮衝突的情境則可再利用其他位置的 letters
+  > 128 * log(2) / log(62) ~= 21
