@@ -1,5 +1,28 @@
 # URL shortener
 A simple python-implemented URL shortener and some system level thinkings
+## Table of Contents
+- [URL shortener](#url-shortener)
+  - [Table of Contents](#table-of-contents)
+  - [Installation and Run](#installation-and-run)
+  - [System APIs](#system-apis)
+    - [/shortenURL](#shortenurl)
+    - [/getURL](#geturl)
+    - [/\<token>](#token)
+  - [Assumptions](#assumptions)
+  - [Capacity Estimation and Constraints](#capacity-estimation-and-constraints)
+  - [DB schema design](#db-schema-design)
+  - [token generation](#token-generation)
+    - [online generate](#online-generate)
+  - [Current system schematic diagram](#current-system-schematic-diagram)
+  - [Concerns need to be eased](#concerns-need-to-be-eased)
+    - [1. 直接用 Python program 接流量？](#1-直接用-python-program-接流量)
+    - [2. online token generation 可能是效率瓶頸，如何解決？](#2-online-token-generation-可能是效率瓶頸如何解決)
+    - [DB 選用基準？](#db-選用基準)
+    - [DB 的 partition 與 replication？](#db-的-partition-與-replication)
+    - [哪裡會需要 Cache layer？](#哪裡會需要-cache-layer)
+    - [那裡會需要 Load balancer？](#那裡會需要-load-balancer)
+    - [過期資料清除策略？](#過期資料清除策略)
+  - [References](#references)
 
 ## Installation and Run
 
@@ -221,3 +244,7 @@ Error responses
 - 由背景程式在離峰時段施作
 
 
+## References
+- learn a lot from:
+  - [Designing a URL Shortening service like TinyURL](https://www.educative.io/courses/grokking-the-system-design-interview/m2ygV4E81AR)
+  - [系統設計 - 設計縮網址服務](https://www.jyt0532.com/2019/12/05/design-tiny-url/)
