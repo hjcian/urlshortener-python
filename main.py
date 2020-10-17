@@ -60,5 +60,20 @@ def getURL():
         return Response(status=500)
 
 
+@app.route('/<token>', methods=['GET'])
+def redirect(token):
+    url = DB.getURL(token)
+    if not url:
+        return Response(status=404)
+
+    headers = {
+        "location": url
+    }
+    return Response(
+        status=302,
+        headers=headers
+    )
+
+
 if __name__ == "__main__":
     app.run("0.0.0.0", port=12345, debug=True)

@@ -17,3 +17,6 @@ Content-Type: application/json
 {
     "token": "54e3QA"
 }
+
+### /<token> redirect by backend server
+GET http://{{local}}:{{port}}/54e3QA HTTP/1.1
