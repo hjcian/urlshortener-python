@@ -1,12 +1,18 @@
+import os
 import json
 
 from flask import Flask, Response, request
 
+from logger import LOGGER
 from dbhandler import DBHandler
 from tokengenerator import generate
 
 app = Flask(__name__)
-DB = DBHandler()
+DB = DBHandler(
+    mode=os.environ.get("DBMODE", "memory"),
+    db_host=os.environ.get("DBHOST", "127.0.0.1"),
+    db_port=os.environ.get("DBPORT", 27017),
+    )
 # DB is a DB handler, can be an actual DB server's connection pool
 # by passing some configurations.
 
@@ -22,7 +28,9 @@ def shortenURL():
         token = generate(url)
         ret = DB.insertEntry(url=url, token=token)
         if ret != DB.INSERT_OK:
-            print("entry collision, but return the token for accessing is OK")
+            LOGGER.warning((
+                "entry collision, "
+                "but return the token for accessing is OK"))
 
         return Response(
             response=json.dumps({
@@ -32,7 +40,7 @@ def shortenURL():
             mimetype="application/json"
         )
     except Exception as e:
-        print("Unexpected error: {}".format(e))
+        LOGGER.error("Unexpected error: {}".format(e), exc_info=True)
         return Response(status=500)
 
 
@@ -56,7 +64,7 @@ def getURL():
             mimetype="application/json"
         )
     except Exception as e:
-        print("Unexpected error: {}".format(e))
+        LOGGER.error("Unexpected error: {}".format(e), exc_info=True)
         return Response(status=500)
 
 
