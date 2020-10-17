@@ -17,11 +17,11 @@ A simple python-implemented URL shortener and some system level thinkings
   - [Concerns need to be eased](#concerns-need-to-be-eased)
     - [1. 直接用 Python program 接流量？](#1-直接用-python-program-接流量)
     - [2. online token generation 可能是效率瓶頸，如何解決？](#2-online-token-generation-可能是效率瓶頸如何解決)
-    - [DB 選用基準？](#db-選用基準)
-    - [DB 的 partition 與 replication？](#db-的-partition-與-replication)
-    - [哪裡會需要 Cache layer？](#哪裡會需要-cache-layer)
-    - [那裡會需要 Load balancer？](#那裡會需要-load-balancer)
-    - [過期資料清除策略？](#過期資料清除策略)
+    - [3. DB 選用基準？](#3-db-選用基準)
+    - [4. DB 的 partition 與 replication？](#4-db-的-partition-與-replication)
+    - [5. 哪裡會需要 Cache layer？](#5-哪裡會需要-cache-layer)
+    - [6. 那裡會需要 Load balancer？](#6-那裡會需要-load-balancer)
+    - [7. 過期資料清除策略？](#7-過期資料清除策略)
   - [References](#references)
 
 ## Installation and Run
@@ -210,15 +210,15 @@ Error responses
 **single point of failure?**
 - KGS 的 QPS 可透過 app 的批次存取來減少，故可簡單給個 standby server 等 main service 掛點時切換
 
-### DB 選用基準？
+### 3. DB 選用基準？
 - SQL vs. NoSQL?
-### DB 的 partition 與 replication？
+### 4. DB 的 partition 與 replication？
 - 單台機器儲存 7.6 TiB 的資料可能有點誇張
 - 可使用 DB 應已內建的 partition 機制來做分散式儲存
     - key hash 來讓資料足夠分散在不同 partition + [consistent hashing](https://medium.com/@sandeep4.verma/consistent-hashing-8eea3fb4a598) 來避免加減機器時造成大量的資料搬遷
 - 接著，可考慮再利用 replication 的支援將讀寫分離
 
-### 哪裡會需要 Cache layer？
+### 5. 哪裡會需要 Cache layer？
 - 縮址還原的請求，10000 QPS 的路徑
 - 可選擇 Redis 或 Memcache
 - Evict strategy 使用 LRU，只 caching 最近被存取的策略符合我們的應用假設
@@ -228,7 +228,7 @@ Error responses
     - 此時可選擇是由 app 來負責直接 update cache 或尋找 DB 的功能來直接對 cache server 做 update
 
 
-### 那裡會需要 Load balancer？
+### 6. 那裡會需要 Load balancer？
 
 - 基本上，節點需要被 scaling 來處理流量的前面都可以放 LB：
     1. client -> app
@@ -240,7 +240,7 @@ Error responses
 - 當 cache 與 DB 皆有多台時，端看 DB 產品提供何種 replication 的機制，若為 master / slaves 的架構，則將讀取流量都分散到 read-only 的 slaves 上
 - 寫入的需求 (創建短網址與 update cache) 則由 master 負責做
 
-### 過期資料清除策略？
+### 7. 過期資料清除策略？
 - 由背景程式在離峰時段施作
 
 
