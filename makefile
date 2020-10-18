@@ -1,7 +1,10 @@
 SHORT_NAME=surl
 NAME=hjcian/surl
 
-.PHONY: build start
+.PHONY: build start run dbrun
+
+start:
+	DBMODE=mongodb ./env/bin/python main.py
 
 build:
 	docker image build -t ${NAME} .

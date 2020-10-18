@@ -41,6 +41,7 @@ def generate(url):
 
 if __name__ == "__main__":
     import random
+    import json
 
     num = getInterger("{}".format(random.random()))
     token = encode(num)
@@ -48,3 +49,16 @@ if __name__ == "__main__":
     print(num)
     print(token)
     print(token[:TOKEN_LENGTH])
+    urls = []
+    tokens = []
+    for i in range(100000):
+        url = "http://{:x>10}.com".format(i)
+        token = generate(url)
+        urls.append(url)
+        tokens.append(token)
+        # print(url, token)
+
+    json.dump({
+        "urls": urls,
+        "tokens": tokens
+    }, open("data.json", "w"), indent=2)
