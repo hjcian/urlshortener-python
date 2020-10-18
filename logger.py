@@ -1,14 +1,13 @@
 import logging
-import sys
 
 __all__ = ["LOGGER"]
 
 
 def initLogger():
     logger = logging.getLogger("urlshortener")
+    logger.setLevel(logging.DEBUG)
 
-    console = logging.StreamHandler(sys.stdout)
-    console.setLevel(logging.INFO)
+    console = logging.StreamHandler()
 
     formatter = logging.Formatter(
         '[%(asctime)s][%(levelname)s] %(message)s',
@@ -20,4 +19,4 @@ def initLogger():
     return logger
 
 
-LOGGER = initLogger()
+LOGGER = initLogger()  # a singleton logger for project use

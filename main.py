@@ -84,4 +84,6 @@ def redirect(token):
 
 
 if __name__ == "__main__":
+    LOGGER.info("Server start...")
     app.run("0.0.0.0", port=12345, debug=True)
+    LOGGER.info("Server shutdown...")
