@@ -1,4 +1,6 @@
 from pymongo import MongoClient
+from redis import Redis
+
 from logger import LOGGER
 
 
@@ -8,6 +10,11 @@ def createMongoClient(db_host, db_post, database, collection):
     db = client[database]
     collection = db[collection]
     return collection
+
+
+def createRedisClient(cache_host, cache_port):
+    r = Redis(host=cache_host, port=cache_port)
+    return r
 
 
 class InMemoryKV(object):
@@ -59,15 +66,58 @@ class MongoDB(object):
         return bool(self.get(token))
 
 
+class RedisCache(object):
+    def __init__(self, cache_host, cache_port, db_instance):
+        self.cache = createRedisClient(cache_host, cache_port)
+        self.db = db_instance
+
+    def update(self, url, token):
+        # just use db's update
+        return self.db.update(url, token)
+
+    def get(self, token):
+        url = self.cache.get(token)
+        if url:  # cache hit
+            LOGGER.debug("[{}] cache HIT: {}".format(
+                self.__class__.__name__, token))
+            return url.decode()  # python 3 is a byte object
+
+        LOGGER.debug("[{}] cache MISS: {}".format(
+                self.__class__.__name__, token))
+        url = self.db.get(token)
+
+        if url:  # app is responsible for update cache
+            self.cache.set(token, url)
+            LOGGER.debug("[{}] update cache: {}:{}".format(
+                self.__class__.__name__, token, url))
+
+        return url
+
+    def check(self, token):
+        url = self.cache.get(token)
+        if url:  # cache hit
+            return True
+
+        url = self.db.get(token)
+        return bool(url)
+
+
 class DBHandler(object):
     INSERT_OK = 0
 
-    def __init__(self, mode="memory", db_host=None, db_port=None):
+    def __init__(
+            self, mode="memory",
+            db_host=None, db_port=None,
+            cache_host=None, cache_port=None
+            ):
         LOGGER.info("[{}] DB mode: {}".format(self.__class__.__name__, mode))
         if mode == "memory":
             self.db = InMemoryKV()
         elif mode == "mongodb":
             self.db = MongoDB(db_host, db_port, "urlshortener", "url")
+        elif mode == "cachedb":
+            mongo = MongoDB(db_host, db_port, "urlshortener", "url")
+            self.db = RedisCache(cache_host, cache_port, mongo)
         else:
             raise RuntimeError("DBMODE={} is not supported".format(mode))
 

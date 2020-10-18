@@ -1,10 +1,13 @@
 SHORT_NAME=surl
 NAME=hjcian/surl
 
-.PHONY: build start run dbrun
+.PHONY: cachemode dbmode build run dbrun
 
-start:
-	DBMODE=mongodb ./env/bin/python main.py
+cachemode:
+	DBMODE=cachedb python main.py
+
+dbmode:
+	DBMODE=mongodb python main.py
 
 build:
 	docker image build -t ${NAME} .
