@@ -16,4 +16,7 @@ run:
 	docker run -it --rm -p 12345:12345 --name ${SHORT_NAME} ${NAME}
 
 dbrun:
-	docker-compose -f docker-compose-db.yml up
+	docker-compose -f docker-compose.db.yml up
+
+cacherun:
+	docker-compose -f docker-compose.cache.db up
