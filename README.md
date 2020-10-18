@@ -71,7 +71,7 @@ make cacherun   # run the demo of composition (APP + Mongo DB + Redis Cache)
 
 ## System APIs
 ### /shortenURL
-- shorten the given URL, return a token to frontend fir further use
+- shorten the given URL, return a token to frontend for further use
 
 ```shell
 curl --request POST \
@@ -98,8 +98,7 @@ Error responses
 - (500) internal error
 
 ### /getURL
-- give the token, backend will return the original URL to frontend for further use (e.g. redirect)
-- if token not exists, reply a 404 NOT FOUND
+- give the token, app will return the original URL to frontend for further use (e.g. redirect)
 
 ```shell
 curl --request POST \
@@ -144,8 +143,8 @@ Date: Sat, 17 Oct 2020 09:02:06 GMT
 ```
 
 Error responses
-- (404) not found the token, maybe it is invalid or already expired
-
+- (404) not found the token, maybe it is invalid or just not exist
+- (500) internal error
 
 ## Thoughts about Scalability
 ### System Assumptions
