@@ -1,0 +1,22 @@
+version: '2'
+services:
+    app:
+        depends_on:
+            - mongodb
+        image: hjcian/surl
+        container_name: surl
+        command: > # sleep 5 is a practical approach to wait the DB ready
+            /bin/sh -c "
+            sleep 5;
+            python main.py;"
+        ports:
+            - "12345:12345"
+        environment:
+            DBMODE: mongodb
+            DBHOST: mongodb
+            DBPORT: 27017 # use container's internal port
+    mongodb:
+        image: mongo:4.4
+        container_name: mongo4
+        ports:
+            - "37017:27017" # use 37017 to prevent port conflict in my machine

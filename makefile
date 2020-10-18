@@ -10,6 +10,4 @@ run:
 	docker run -it --rm -p 12345:12345 --name ${SHORT_NAME} ${NAME}
 
 dbrun:
-	DBMODE=mongodb python main.py
-# TODO:
-# docker run -it --rm -p 12345:12345 -e DBMODE=mongodb --name ${SHORT_NAME} ${NAME}
+	docker-compose -f docker-compose-db.yml up
