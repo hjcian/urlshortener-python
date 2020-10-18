@@ -2,7 +2,7 @@ import http from 'k6/http'
 import { Counter } from 'k6/metrics'
 // import { sleep } from 'k6'
 const data = JSON.parse(open('./data.json'))
-const tokens = data.tokens.slice(39000, 41000)
+const tokens = data.tokens.slice(0, 1000)
 
 const OKCounter = new Counter('Status - 200')
 const NotFoundCounter = new Counter('Status - 404')
@@ -30,7 +30,7 @@ export default function () {
     }
   }
 
-  const resp = http.post('http://localhost:12345/getURL', payload, params)
+  const resp = http.post('http://127.0.0.1:12345/getURL', payload, params)
 
   if (resp.status === 200) {
     OKCounter.add(1)
