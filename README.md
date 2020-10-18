@@ -40,19 +40,19 @@ make build      # build docker image at local machine
 ```
 
 **Run APP**
-- 此例僅有簡單的 APP program 運行在 docker 內。使用 in-memory dict 做資料儲存。
+- 此例僅有簡單的 APP program 運行在 docker 內。使用 in-memory dict 做資料儲存。APP 直接運行在前景
 ```shell
 make run   # run the vanilla version of APP, without external DB engine supports
 ```
 
 **Run APP + Mongo DB**
-- 此例在 docker 內增加 mongo DB 做 token|url 的儲存，APP 改成向 mongo DB 存取資料。
+- 此例在 docker 內增加 mongo DB 做 token|url 的儲存，APP 改成向 mongo DB 存取資料。APP 直接運行在前景
 ```shell
 make dbrun   # run the demo of composition (APP + Mongo DB)
 ```
 
 **Run APP + Mongo DB + Redis Cache**
-- 此例在 docker 內再增加 Redis 做 cache 以加速轉址的請求。
+- 此例在 docker 內再增加 Redis 做 cache 以加速轉址的請求。APP 直接運行在前景
 ```shell
 make cacherun   # run the demo of composition (APP + Mongo DB + Redis Cache)
 ```
