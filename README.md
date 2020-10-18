@@ -23,6 +23,7 @@ A simple python-implemented URL shortener and some system level thinkings
     - [6. 那裡會需要 Load balancer？](#6-那裡會需要-load-balancer)
     - [7. 過期資料清除策略？](#7-過期資料清除策略)
   - [References](#references)
+  - [TODO](#todo)
 
 ## Deploy and Run
 ### By Docker
@@ -297,3 +298,7 @@ Refs:
 - learn a lot from:
   - [Designing a URL Shortening service like TinyURL](https://www.educative.io/courses/grokking-the-system-design-interview/m2ygV4E81AR)
   - [系統設計 - 設計縮網址服務](https://www.jyt0532.com/2019/12/05/design-tiny-url/)
+
+## TODO
+1. 考慮改成使用 [--net=host 模式](https://docs.docker.com/engine/reference/run/#network-settings) 在 demo 中來達到更好的效能
+2. 基於 1.，demo APP 再使用 gunicorn 接流量，觀察是否有改善吞吐量
