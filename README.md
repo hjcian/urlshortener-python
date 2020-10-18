@@ -39,19 +39,29 @@ make build      # build docker image at local machine
 ```
 
 **Run APP**
+- 此例僅有簡單的 APP program 運行在 docker 內。使用 in-memory dict 做資料儲存。
 ```shell
 make run   # run the vanilla version of APP, without external DB engine supports
 ```
 
 **Run APP + Mongo DB**
+- 此例在 docker 內增加 mongo DB 做 token|url 的儲存，APP 改成向 mongo DB 存取資料。
 ```shell
 make dbrun   # run the demo of composition (APP + Mongo DB)
 ```
 
 **Run APP + Mongo DB + Redis Cache**
+- 此例在 docker 內再增加 Redis 做 cache 以加速轉址的請求。
 ```shell
 make cacherun   # run the demo of composition (APP + Mongo DB + Redis Cache)
 ```
+
+**Comments**
+- APP 會運行在 port:12345
+- ⚠️ 目前使用預設的 --net=bridge 模式，並用 -p 12345:12345 的方式橋接 container 與 host
+  - 此預設會造成吞吐量瓶頸發生在 docker 的網路層 *([What is the runtime performance cost of a Docker container?
+](https://stackoverflow.com/a/26149994/8694937))*
+  - TODO: ⛑️ 考慮改成使用 [--net=host 模式](https://docs.docker.com/engine/reference/run/#network-settings) 在 demo 中來達到更好的效能
 
 ## System APIs
 ### /shortenURL
