@@ -302,3 +302,7 @@ Refs:
 ## TODO
 1. 考慮改成使用 [--net=host 模式](https://docs.docker.com/engine/reference/run/#network-settings) 在 demo 中來達到更好的效能
 2. 基於 1.，demo APP 再使用 gunicorn 接流量，觀察是否有改善吞吐量
+3. 基於 1. 與 2.，準備各種架構的 demo 的 configuration for doing benchmark
+   1. 需要 GCP 開乾淨的機器測試基於 1. 的改善效果
+   2. 需要寫 k6 的從安裝到執行的 instructions
+   3. 貼上自己的測試報告
