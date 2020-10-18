@@ -3,3 +3,4 @@ env/
 *.md
 tests/
 .git
+docker/
