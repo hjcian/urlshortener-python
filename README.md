@@ -3,7 +3,8 @@ A simple python-implemented URL shortener and some system level thinkings
 ## Table of Contents
 - [URL shortener](#url-shortener)
   - [Table of Contents](#table-of-contents)
-  - [Installation and Run](#installation-and-run)
+  - [Deploy and Run](#deploy-and-run)
+    - [By Docker](#by-docker)
   - [System APIs](#system-apis)
     - [/shortenURL](#shortenurl)
     - [/getURL](#geturl)
@@ -23,21 +24,33 @@ A simple python-implemented URL shortener and some system level thinkings
     - [7. 過期資料清除策略？](#7-過期資料清除策略)
   - [References](#references)
 
-## Installation and Run
-
+## Deploy and Run
+### By Docker
 > System Prerequisites:
 > - git
-> - Python 3.x
-> - virtualenv
->
+> - docker
+> - make (GNU make utility)
 
+**Build image**
 ```shell
 git clone https://github.com/hjcian/urlshortener-python.git
 cd urlshortener-python
-virtualenv -p python3 env
-source ./env/bin/activate
-pip install -r requirements.txt
-python main.py
+make build      # build docker image at local machine
+```
+
+**Run APP**
+```shell
+make run   # run the vanilla version of APP, without external DB engine supports
+```
+
+**Run APP + Mongo DB**
+```shell
+make dbrun   # run the demo of composition (APP + Mongo DB)
+```
+
+**Run APP + Mongo DB + Redis Cache**
+```shell
+make cacherun   # run the demo of composition (APP + Mongo DB + Redis Cache)
 ```
 
 ## System APIs
