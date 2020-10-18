@@ -13,7 +13,7 @@ build:
 	docker image build -t ${NAME} .
 
 run:
-	docker run -it --rm -p 12345:12345 --name ${SHORT_NAME} ${NAME}
+	docker-compose -f docker-compose.yml up
 
 dbrun:
 	docker-compose -f docker-compose.db.yml up

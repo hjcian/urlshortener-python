@@ -1,0 +1,8 @@
+version: '2'
+services:
+    app:
+        image: hjcian/surl
+        container_name: surl
+        command: "python main.py"
+        ports:
+            - "12345:12345"
