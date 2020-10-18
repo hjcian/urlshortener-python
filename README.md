@@ -5,23 +5,25 @@ A simple python-implemented URL shortener and some system level thinkings
   - [Table of Contents](#table-of-contents)
   - [Deploy and Run](#deploy-and-run)
     - [By Docker](#by-docker)
+  - [Comments](#comments)
   - [System APIs](#system-apis)
     - [/shortenURL](#shortenurl)
     - [/getURL](#geturl)
     - [/\<token>](#token)
-  - [System Assumptions](#system-assumptions)
-  - [Capacity Estimation and Constraints](#capacity-estimation-and-constraints)
-  - [DB schema design](#db-schema-design)
-  - [Token generation strategy](#token-generation-strategy)
-  - [Fundamental system schematic diagram](#fundamental-system-schematic-diagram)
-  - [Concerns need to be eased](#concerns-need-to-be-eased)
-    - [1. 直接用 Python program 接流量？](#1-直接用-python-program-接流量)
-    - [2. Online token generation 可能會是效率瓶頸，如何解決？](#2-online-token-generation-可能會是效率瓶頸如何解決)
-    - [3. DB 選用基準？](#3-db-選用基準)
-    - [4. DB 的 partition 與 replication？](#4-db-的-partition-與-replication)
-    - [5. 哪裡會需要 Cache layer？](#5-哪裡會需要-cache-layer)
-    - [6. 那裡會需要 Load balancer？](#6-那裡會需要-load-balancer)
-    - [7. 過期資料清除策略？](#7-過期資料清除策略)
+  - [Thoughts about Scalability](#thoughts-about-scalability)
+    - [System Assumptions](#system-assumptions)
+    - [Capacity Estimation and Constraints](#capacity-estimation-and-constraints)
+    - [DB schema design](#db-schema-design)
+    - [Token generation strategy](#token-generation-strategy)
+    - [Fundamental system schematic diagram](#fundamental-system-schematic-diagram)
+    - [Concerns need to be eased](#concerns-need-to-be-eased)
+      - [1. 直接用 Python program 接流量？](#1-直接用-python-program-接流量)
+      - [2. Online token generation 可能會是效率瓶頸，如何解決？](#2-online-token-generation-可能會是效率瓶頸如何解決)
+      - [3. DB 選用基準？](#3-db-選用基準)
+      - [4. DB 的 partition 與 replication？](#4-db-的-partition-與-replication)
+      - [5. 哪裡會需要 Cache layer？](#5-哪裡會需要-cache-layer)
+      - [6. 那裡會需要 Load balancer？](#6-那裡會需要-load-balancer)
+      - [7. 過期資料清除策略？](#7-過期資料清除策略)
   - [References](#references)
   - [TODO](#todo)
 
@@ -57,12 +59,15 @@ make dbrun   # run the demo of composition (APP + Mongo DB)
 make cacherun   # run the demo of composition (APP + Mongo DB + Redis Cache)
 ```
 
-**Comments**
+## Comments
 - APP 會運行在 port:12345
 - ⚠️ 目前使用預設的 --net=bridge 模式，並用 -p 12345:12345 的方式橋接 container 與 host
   - 此預設會造成吞吐量瓶頸發生在 docker 的網路層 *([What is the runtime performance cost of a Docker container?
 ](https://stackoverflow.com/a/26149994/8694937))*
   - TODO: ⛑️ 考慮改成使用 [--net=host 模式](https://docs.docker.com/engine/reference/run/#network-settings) 在 demo 中來達到更好的效能
+- 目前的實作品為 demo 用途，直接運行的話為**單點的 APP**、**一支 mongo DB 作為 main database**、**一支 Redis 作為 cache db**
+- 故**無法保證其 concurrent 的處理能力**。其餘的 API document 及後續考慮 scalability 的思路請參考以下章節
+
 
 ## System APIs
 ### /shortenURL
@@ -141,12 +146,14 @@ Date: Sat, 17 Oct 2020 09:02:06 GMT
 Error responses
 - (404) not found the token, maybe it is invalid or already expired
 
-## System Assumptions
+
+## Thoughts about Scalability
+### System Assumptions
 - 使用者**不需要登入**就能創建短網址。也就是一個功能單純的 public service
 - 讀寫流量假設為 **100:10000** (QPS)，用來估計硬體需求
 - 短網址僅儲存 **5 年** (因為硬碟雖然便宜但不是無限大，且不做 data purge 也會造成 DB 效率下降)
 
-## Capacity Estimation and Constraints
+### Capacity Estimation and Constraints
 **Traffic estimates**
 - 寫入流量假設為 **100 QPS** (即每秒產生短網址的數量)
 - 讀取流量假設為 **10000 QPS** (即未來每秒存取短網址的數量)
@@ -184,7 +191,7 @@ Error responses
 |儲存5年|7.6 TiB|
 |緩存|81 GiB|
 
-## DB schema design
+### DB schema design
 - 最基本的需求僅需要一張 table 儲存 token 與 url，通常還會加上 createAt 與 deleteAt 方便操作
 - 故 table schema 為：
   - token (PK, string)
@@ -194,7 +201,7 @@ Error responses
 - createAt 與 deleteAt 加上 index 在後續若要做統計分析時可加速查找
 - deleteAt 上 index 在未來做 data purge 時也能避免 full table scan
 
-## Token generation strategy
+### Token generation strategy
 - 先使用即時的 **online generation** 方式，client 有創建請求時則即時運算產生 token
 - 短網址需要的 token 長度，假設使用 **base 62** 的方式來產生
   > base 62: 只的是使用 digits(10) + lower letters(26) + upper letters(26) 共 62 個 characters
@@ -204,7 +211,7 @@ Error responses
 - 再利用此 128-bit 的 value 轉換成 base 62 的 encoded string，會有 21 個 letters，我們簡單取用前 6 位的 letters 作為 token 即可。若需要考慮衝突的情境則可再利用其他位置的 letters
   > 128 * log(2) / log(62) ~= 21
 
-## Fundamental system schematic diagram
+### Fundamental system schematic diagram
 - 目前實作品的處理流程，簡單來看僅有四個元件：
     1. Client 端
     2. App 主程式
@@ -214,8 +221,8 @@ Error responses
 ![](https://i.imgur.com/DYhboam.png)
 - 以上圖為基礎，底下提出幾點圖上架構尚須進一步考慮的隱憂 (紅圈數字)
 
-## Concerns need to be eased
-### 1. 直接用 Python program 接流量？
+### Concerns need to be eased
+#### 1. 直接用 Python program 接流量？
 - **當然不能這麼做**，首先 python program 至少得先用 WSGI 帶起來，此舉還能做出 master / workers 的架構，來充分利用機器的 CPU、消弭一點 GIL 可能帶來的隱憂
     - e.g. [gunicorn](https://gunicorn.org/)
 - 實際上，面對 public 的節點需使用成熟的 web server 來處理 concurrent requests (e.g. Apache or Nginx)
@@ -227,7 +234,7 @@ Error responses
 🆕 ***改善後的 client <---> app 示意圖***
 ![](https://i.imgur.com/57Cdf8D.png)
 
-### 2. Online token generation 可能會是效率瓶頸，如何解決？
+#### 2. Online token generation 可能會是效率瓶頸，如何解決？
 - 再獨立一支 token generation service (TGS)，負責事先產生好 6 letters tokens，並儲存下來，app 需要時向它存取即可
 - 好處是 app 端不需要對 URL encode，也不用擔心 token collision 的問題了
 
@@ -250,7 +257,7 @@ Error responses
 ![](https://i.imgur.com/TslMCHx.png)
 
 
-### 3. DB 選用基準？
+#### 3. DB 選用基準？
 - 考慮到 billions 數量級的儲存
 - entry 之間毫無 **relation**
 - read-heavy application
@@ -261,13 +268,13 @@ Refs:
 - [MongoDB vs MySQL: A Comparative Study on Databases](https://www.simform.com/mongodb-vs-mysql-databases/)
 - [why are noSQL databases more scalable than SQL?](https://softwareengineering.stackexchange.com/questions/194340/why-are-nosql-databases-more-scalable-than-sql)
 
-### 4. DB 的 partition 與 replication？
+#### 4. DB 的 partition 與 replication？
 - 單台機器儲存 7.6 TiB 的資料可能有點誇張
 - 可使用 DB 應已內建的 partition 機制來做分散式儲存
     - key hash 來讓資料足夠分散在不同 partition + [consistent hashing](https://medium.com/@sandeep4.verma/consistent-hashing-8eea3fb4a598) 來避免加減機器時造成大量的資料搬遷
 - 接著，可考慮再利用 replication 的支援將讀寫分離
 
-### 5. 哪裡會需要 Cache layer？
+#### 5. 哪裡會需要 Cache layer？
 - 縮址還原的請求，10000 QPS 的路徑上每次都去查詢 DB 會是顯而易見的瓶頸
 - 可選擇 Redis 或 Memcache 介於 APP 與 DB 之間
 - Evict strategy 使用 LRU，只 caching 最近被存取的策略符合我們的應用假設
@@ -279,7 +286,7 @@ Refs:
 🆕 **改善後的 APP <---> DB 示意圖**
 ![](https://i.imgur.com/W3Cf2T4.png)
 
-### 6. 那裡會需要 Load balancer？
+#### 6. 那裡會需要 Load balancer？
 
 - 基本上，節點需要被 scaling 來處理流量的前面都可以放 LB：
     1. client -> app
@@ -291,7 +298,7 @@ Refs:
 - 當 cache 與 DB 皆有多台時，端看 DB 產品提供何種 replication 的機制，若為 master / slaves 的架構，則將讀取流量都分散到 read-only 的 slaves 上
 - 寫入的需求 (創建短網址與 update cache) 則由 master 負責做
 
-### 7. 過期資料清除策略？
+#### 7. 過期資料清除策略？
 - 由背景程式在離峰時段施作
 
 ## References
