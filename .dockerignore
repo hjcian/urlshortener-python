@@ -1,3 +1,5 @@
 env/
 .vscode/
 *.md
+tests/
+.git
