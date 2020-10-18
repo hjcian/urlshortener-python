@@ -19,4 +19,4 @@ dbrun:
 	docker-compose -f docker-compose.db.yml up
 
 cacherun:
-	docker-compose -f docker-compose.cache.db up
+	docker-compose -f docker-compose.cache.db.yml up
