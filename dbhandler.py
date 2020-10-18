@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from logger import LOGGER
 
 
 def createMongoClient(db_host, db_post, database, collection):
@@ -26,6 +27,11 @@ class InMemoryKV(object):
 class MongoDB(object):
     def __init__(self, db_host, db_post, database, collection):
         self.db = createMongoClient(db_host, db_post, database, collection)
+        if "token_index" not in self.db.index_information():
+            resp = self.db.create_index(
+                "token", name="token_index", unique=True)
+            LOGGER.info("[{}] create index: {}".format(
+                self.__class__.__name__, resp))
 
     def update(self, url, token):
         ret = self.db.insert_one(
@@ -34,7 +40,8 @@ class MongoDB(object):
                 "url": url,
             }
         )
-        print(ret.inserted_id)
+        LOGGER.info("[{}] insert id: {}".format(
+            self.__class__.__name__, ret.inserted_id))
 
     def get(self, token):
         ret = self.db.find_one(
@@ -56,7 +63,7 @@ class DBHandler(object):
     INSERT_OK = 0
 
     def __init__(self, mode="memory", db_host=None, db_port=None):
-        print("DB mode: {}".format(mode))
+        LOGGER.info("[{}] DB mode: {}".format(self.__class__.__name__, mode))
         if mode == "memory":
             self.db = InMemoryKV()
         elif mode == "mongodb":
