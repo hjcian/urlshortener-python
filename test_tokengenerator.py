@@ -20,3 +20,14 @@ class TestTokenGenerator(unittest.TestCase):
 
         token = generate(url, 5)
         self.assertEqual(token, "5AGfz")
+
+    def test_generate_invalid_urls(self):
+        invalid_urls = [
+            "http://examplecom",
+            "http//example.com",
+            "httpssss://example.com",
+            "htt://example.com",
+        ]
+        for invalid_url in invalid_urls:
+            token = generate(invalid_url, 6)
+            self.assertEqual(token, None)

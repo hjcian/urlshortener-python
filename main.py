@@ -36,6 +36,10 @@ def shortenURL():
             return Response(status=400)
 
         token = generate(url, TOKEN_LEN)
+        if not token:
+            # invalid URL
+            return Response(status=400)
+
         ret = DB.insertEntry(url=url, token=token)
         if ret != DB.INSERT_OK:
             LOGGER.warning((

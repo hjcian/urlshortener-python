@@ -28,7 +28,21 @@ def encode(big_num):
     return token
 
 
+def validateURL(url):
+    """
+    Very simple validation
+    """
+    if (url.lower().startswith("http://")
+            or url.lower().startswith("https://"))\
+            and "." in url:
+        return True
+    return False
+
+
 def generate(url, token_len=6):
+    if not validateURL(url):
+        return None
+
     big_num = getInterger(url)
     token = encode(big_num)
     token = token[:token_len]
