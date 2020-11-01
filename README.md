@@ -36,6 +36,7 @@ A simple python-implemented URL shortener and some system level thinkings
 > - make (GNU make utility)
 
 **Build image**
+- *not necessary anymore, all running entrypoint has depends on `build` rule*
 ```shell
 git clone https://github.com/hjcian/urlshortener-python.git
 cd urlshortener-python
