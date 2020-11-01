@@ -1,7 +1,10 @@
 SHORT_NAME=surl
 NAME="hjcian/surl"
 
-.PHONY: cachemode dbmode build run dbrun
+.PHONY: test cachemode dbmode build run dbrun cacherun
+
+test:
+	./env/bin/pytest -v . --cov --cov-config=./.coveragerc
 
 cachemode:
 	DBMODE=cachedb python main.py
