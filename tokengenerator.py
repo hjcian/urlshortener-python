@@ -4,10 +4,6 @@ import string
 CHARSET = string.digits + string.ascii_uppercase + string.ascii_lowercase
 BASE62 = len(CHARSET)
 
-TOKEN_LENGTH = 6
-# TOKEN_LENGTH is pre-computed during system design phase, 6 letters can
-# accommodate around 15 billions URLs
-
 EIGHT_BITS = 8  # 1 byte = 8 bits
 
 
@@ -32,10 +28,10 @@ def encode(big_num):
     return token
 
 
-def generate(url):
+def generate(url, token_len=6):
     big_num = getInterger(url)
     token = encode(big_num)
-    token = token[:TOKEN_LENGTH]
+    token = token[:token_len]
     return token
 
 

@@ -119,6 +119,7 @@ def createDB(mode, db_host=None, db_port=None,
     Return:
         A DB object inherited from _db
     """
+
     if mode not in ("memory", "mongodb", "cachedb"):
         raise RuntimeError("DBMODE={} is not supported".format(mode))
     LOGGER.info("DB mode: {}".format(mode))

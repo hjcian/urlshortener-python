@@ -20,6 +20,12 @@ DB = DBHandler(
 # DB is a DB handler, can be an actual DB server's connection pool
 # by passing some configurations.
 
+TOKEN_LEN = os.environ.get("TOKEN_LEN", 5)
+# TOKEN_LEN is pre-computed during system design phase
+# 6 letters can accommodate around 15 billions URLs
+# - 6 letters can produce 56 billions (56,800,235,584) requirements
+# - 5 letters can produce 900 millions (916,132,832) requirements
+
 
 @app.route('/shortenURL', methods=['POST'])
 def shortenURL():
@@ -29,7 +35,7 @@ def shortenURL():
         if not url or not isinstance(url, str):
             return Response(status=400)
 
-        token = generate(url)
+        token = generate(url, TOKEN_LEN)
         ret = DB.insertEntry(url=url, token=token)
         if ret != DB.INSERT_OK:
             LOGGER.warning((
