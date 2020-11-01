@@ -17,7 +17,18 @@ def createRedisClient(cache_host, cache_port):
     return r
 
 
-class InMemoryKV(object):
+class _db(object):
+    def update(self, url, token):
+        raise NotImplementedError()
+
+    def get(self, token):
+        raise NotImplementedError()
+
+    def check(self, token):
+        raise NotImplementedError()
+
+
+class InMemoryKV(_db):
     def __init__(self):
         self.db = {}
 
@@ -31,7 +42,7 @@ class InMemoryKV(object):
         return token in self.db
 
 
-class MongoDB(object):
+class MongoDB(_db):
     def __init__(self, db_host, db_post, database, collection):
         self.db = createMongoClient(db_host, db_post, database, collection)
         if "token_index" not in self.db.index_information():
@@ -66,7 +77,7 @@ class MongoDB(object):
         return bool(self.get(token))
 
 
-class RedisCache(object):
+class RedisCache(_db):
     def __init__(self, cache_host, cache_port, db_instance):
         self.cache = createRedisClient(cache_host, cache_port)
         self.db = db_instance
@@ -83,7 +94,7 @@ class RedisCache(object):
             return url.decode()  # python 3 is a byte object
 
         LOGGER.debug("[{}] cache MISS: {}".format(
-                self.__class__.__name__, token))
+            self.__class__.__name__, token))
         url = self.db.get(token)
 
         if url:  # app is responsible for update cache
@@ -102,24 +113,33 @@ class RedisCache(object):
         return bool(url)
 
 
+def createDB(mode, db_host=None, db_port=None,
+             cache_host=None, cache_port=None):
+    """
+    Return:
+        A DB object inherited from _db
+    """
+    if mode not in ("memory", "mongodb", "cachedb"):
+        raise RuntimeError("DBMODE={} is not supported".format(mode))
+    LOGGER.info("DB mode: {}".format(mode))
+
+    db = None
+    if mode == "memory":
+        db = InMemoryKV()
+    elif mode == "mongodb":
+        db = MongoDB(db_host, db_port, "urlshortener", "url")
+    elif mode == "cachedb":
+        mongo = MongoDB(db_host, db_port, "urlshortener", "url")
+        db = RedisCache(cache_host, cache_port, mongo)
+
+    return db
+
+
 class DBHandler(object):
     INSERT_OK = 0
 
-    def __init__(
-            self, mode="memory",
-            db_host=None, db_port=None,
-            cache_host=None, cache_port=None
-            ):
-        LOGGER.info("[{}] DB mode: {}".format(self.__class__.__name__, mode))
-        if mode == "memory":
-            self.db = InMemoryKV()
-        elif mode == "mongodb":
-            self.db = MongoDB(db_host, db_port, "urlshortener", "url")
-        elif mode == "cachedb":
-            mongo = MongoDB(db_host, db_port, "urlshortener", "url")
-            self.db = RedisCache(cache_host, cache_port, mongo)
-        else:
-            raise RuntimeError("DBMODE={} is not supported".format(mode))
+    def __init__(self, db):
+        self.db = db
 
     def insertEntry(self, url, token):
         if self.db.check(token):

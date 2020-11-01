@@ -4,17 +4,19 @@ import json
 from flask import Flask, Response, request
 
 from logger import LOGGER
-from dbhandler import DBHandler
+from dbhandler import DBHandler, createDB
 from tokengenerator import generate
 
 app = Flask(__name__)
 DB = DBHandler(
-    mode=os.environ.get("DBMODE", "memory"),
-    db_host=os.environ.get("DBHOST", "127.0.0.1"),
-    db_port=os.environ.get("DBPORT", 27017),
-    cache_host=os.environ.get("CACHEHOST", "127.0.0.1"),
-    cache_port=os.environ.get("CACHEPORT", 6379),
+    createDB(
+        mode=os.environ.get("DBMODE", "memory"),
+        db_host=os.environ.get("DBHOST", "127.0.0.1"),
+        db_port=os.environ.get("DBPORT", 27017),
+        cache_host=os.environ.get("CACHEHOST", "127.0.0.1"),
+        cache_port=os.environ.get("CACHEPORT", 6379),
     )
+)
 # DB is a DB handler, can be an actual DB server's connection pool
 # by passing some configurations.
 
