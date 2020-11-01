@@ -5,6 +5,7 @@ A simple python-implemented URL shortener and some system level thinkings
   - [Table of Contents](#table-of-contents)
   - [Deploy and Run](#deploy-and-run)
     - [By Docker](#by-docker)
+  - [Test](#test)
   - [Comments](#comments)
   - [System APIs](#system-apis)
     - [/shortenURL](#shortenurl)
@@ -57,6 +58,15 @@ make dbrun   # run the demo of composition (APP + Mongo DB)
 - 此例在 docker 內再增加 Redis 做 cache 以加速轉址的請求。APP 直接運行在前景
 ```shell
 make cacherun   # run the demo of composition (APP + Mongo DB + Redis Cache)
+```
+## Test
+> System Prerequisites:
+> - docker
+> - make (GNU make utility)
+
+- 利用 docker 環境執行 testing
+```shell
+make test
 ```
 
 ## Comments
@@ -181,14 +191,14 @@ Error responses
   > 10000 (QPS) * 86400 * 506 / 1024(K) / 1024(M) / 1024(G) * 20% ~= 81 GiB
 
 **Summary**
-|||
-| - | - |
-|創建短網址|100 QPS|
-|轉址查詢|10000 QPS|
-|incoming data|50 KiB/s|
-|outcoming data|5 MiB/s|
-|儲存5年|7.6 TiB|
-|緩存|81 GiB|
+|                |           |
+| -------------- | --------- |
+| 創建短網址     | 100 QPS   |
+| 轉址查詢       | 10000 QPS |
+| incoming data  | 50 KiB/s  |
+| outcoming data | 5 MiB/s   |
+| 儲存5年        | 7.6 TiB   |
+| 緩存           | 81 GiB    |
 
 ### DB schema design
 - 最基本的需求僅需要一張 table 儲存 token 與 url，通常還會加上 createAt 與 deleteAt 方便操作

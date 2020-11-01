@@ -4,7 +4,8 @@ NAME="hjcian/surl"
 .PHONY: test cachemode dbmode build run dbrun cacherun
 
 test:
-	./env/bin/pytest -v . --cov --cov-config=./.coveragerc
+	docker image build -f docker/Dockerfile_test -t ${NAME}-test .
+	docker run -it --rm --name=${SHORT_NAME}-test ${NAME}-test
 
 cachemode:
 	DBMODE=cachedb python main.py
@@ -15,11 +16,11 @@ dbmode:
 build:
 	docker image build -f docker/Dockerfile -t ${NAME} .
 
-run:
+run: build
 	docker-compose -f docker/docker-compose.yml up
 
-dbrun:
+dbrun: build
 	docker-compose -f docker/docker-compose.db.yml up
 
-cacherun:
+cacherun: build
 	docker-compose -f docker/docker-compose.cache.db.yml up

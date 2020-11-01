@@ -1,0 +1,9 @@
+FROM python:3.8-alpine
+
+WORKDIR /app
+
+ADD ./dev-requirements.txt /app/dev-requirements.txt
+RUN pip install -r dev-requirements.txt
+ADD . /app
+
+CMD ["pytest", "-v", "--cov", "--cov-config=./.coveragerc"]
