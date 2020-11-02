@@ -3,9 +3,9 @@ A simple python-implemented URL shortener and some system level thinkings
 ## Table of Contents
 - [URL shortener](#url-shortener)
   - [Table of Contents](#table-of-contents)
+  - [Testing](#testing)
   - [Deploy and Run](#deploy-and-run)
     - [By Docker](#by-docker)
-  - [Test](#test)
   - [Comments](#comments)
   - [System APIs](#system-apis)
     - [/shortenURL](#shortenurl)
@@ -27,6 +27,16 @@ A simple python-implemented URL shortener and some system level thinkings
       - [7. 過期資料清除策略？](#7-過期資料清除策略)
   - [References](#references)
   - [TODO](#todo)
+
+## Testing
+> System Prerequisites:
+> - docker
+> - make (GNU make utility)
+
+- 利用 docker 環境執行 unit tests
+```shell
+make test
+```
 
 ## Deploy and Run
 ### By Docker
@@ -60,15 +70,7 @@ make dbrun   # run the demo of composition (APP + Mongo DB)
 ```shell
 make cacherun   # run the demo of composition (APP + Mongo DB + Redis Cache)
 ```
-## Test
-> System Prerequisites:
-> - docker
-> - make (GNU make utility)
 
-- 利用 docker 環境執行 testing
-```shell
-make test
-```
 
 ## Comments
 - APP 會運行在 port:12345
