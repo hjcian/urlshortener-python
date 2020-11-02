@@ -1,6 +1,6 @@
 import unittest
 
-from tokengenerator import generate, encode
+from tokengenerator import encode, generate
 
 
 class TestTokenGenerator(unittest.TestCase):
