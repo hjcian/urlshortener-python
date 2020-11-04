@@ -3,6 +3,7 @@ import json
 
 from flask import Flask, Response, request
 from flask_restful import Resource, Api
+from flask_cors import CORS
 
 from logger import LOGGER
 from dbhandler import DBHandler, createDB
@@ -108,6 +109,7 @@ def set_resources(app, db):
 def create_app(db):
     app = Flask(__name__)
     api = Api(app)
+    CORS(app)
     set_resources(api, db)
     return app
 
