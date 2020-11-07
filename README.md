@@ -1,5 +1,8 @@
 # URL shortener
-A simple python-implemented URL shortener and some system level thinkings
+A simple python-implemented URL shortener and some system level thinkings.
+
+Related work: [URL shortener - React](https://github.com/hjcian/urlshortener-react)
+
 ## Table of Contents
 - [URL shortener](#url-shortener)
   - [Table of Contents](#table-of-contents)
