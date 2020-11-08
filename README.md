@@ -11,9 +11,9 @@ Related work: [URL shortener - React](https://github.com/hjcian/urlshortener-rea
     - [By Docker](#by-docker)
   - [Comments](#comments)
   - [System APIs](#system-apis)
-    - [/shortenURL](#shortenurl)
-    - [/getURL](#geturl)
-    - [/\<token>](#token)
+    - [Shorten URL - /shortenURL](#shorten-url---shortenurl)
+    - [Retrieve original URL - /getURL](#retrieve-original-url---geturl)
+    - [URL Redirection - /\<token>](#url-redirection---token)
   - [Thoughts about Scalability](#thoughts-about-scalability)
     - [System Assumptions](#system-assumptions)
     - [Capacity Estimation and Constraints](#capacity-estimation-and-constraints)
@@ -86,7 +86,7 @@ make cacherun   # run the demo of composition (APP + Mongo DB + Redis Cache)
 
 
 ## System APIs
-### /shortenURL
+### Shorten URL - /shortenURL
 - shorten the given URL, return a token to frontend for further use
 
 ```shell
@@ -113,7 +113,7 @@ Error responses
 - (400) given nothing or field of 'url' is not a JSON string
 - (500) internal error
 
-### /getURL
+### Retrieve original URL - /getURL
 - give the token, app will return the original URL to frontend for further use (e.g. redirect)
 
 ```shell
@@ -141,7 +141,7 @@ Error responses
 - (404) not found the token, maybe it is invalid or already expired
 - (500) internal error
 
-### /\<token>
+### URL Redirection - /\<token>
 - an endpoint for demostrating the redirection behavior
 ```shell
 curl --request GET \
