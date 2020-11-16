@@ -175,18 +175,10 @@ Error responses
 - 假設五年時間，創建的短網址存好存滿，則會有約 **15 billions 的短網址**。
   > 5(year) * 365(days/year) * 86400(sec./day) * 100(QPS) = 15768000000
 
-**Bandwidth estimates**
-- 估計 application 節點會承受多少實際流量
-- 由於每筆 entry 約 506 bytes，故考慮
-- **incoming** 的頻寬供創建短網址，保守估計約 **50 KiB/s**
-  > 100 (QPS) * 506 / 1024(K) ~= 50 KiB/s
-- **outcoming** 的頻寬供查詢原址，保守估計約 **5 MiB/s**
-  > 10000 (QPS) * 506 / 1024(K) / 1024 (M) ~= 5 MiB/s
-
 **Storage estimates**
 - 估計需要多少 disk usage
-- 沒有考量使用者，故 DB 目前僅需要一張 table 儲存 token | url
-- token 考慮到 6 letters (6 bytes，見下述討論)，url 則再假設只允許 500 letters (500 bytes)，**故一筆 entry 需要 506 bytes**
+- 沒有考量依照使用者區別資料，故 DB 目前僅需要一張 table 儲存 token | url
+- token 考慮到 6 letters (i.e. 6 bytes，見下述討論)，url 則再假設只允許 500 letters (500 bytes)，**故一筆 entry 需要 506 bytes**
 - 故總共 15 billions 筆 entries 需要約 **7.6 TiB**
   > 506 * 15768000000 / 1024(K) / 1024(M) / 1024(G) / 1024(T) ~= 7.6 TiB
 
@@ -196,6 +188,14 @@ Error responses
 - 故大約需要 81 GiB 的記憶體
   > 10000 (QPS) * 86400 * 506 / 1024(K) / 1024(M) / 1024(G) * 20% ~= 81 GiB
 
+**Bandwidth estimates**
+- 估計 application 節點會承受多少實際流量
+- 由於每筆 entry 約 **506 bytes**，故考慮：
+- **incoming** 的頻寬供創建短網址，保守估計約 **50 KiB/s**
+  > 100 (QPS) * 506 / 1024(K) ~= 50 KiB/s
+- **outcoming** 的頻寬供查詢原址，保守估計約 **5 MiB/s**
+  > 10000 (QPS) * 506 / 1024(K) / 1024 (M) ~= 5 MiB/s
+  
 **Summary**
 |                |           |
 | -------------- | --------- |
