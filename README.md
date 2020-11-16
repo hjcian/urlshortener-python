@@ -304,12 +304,9 @@ Refs:
 #### 6. 那裡會需要 Load balancer？
 
 - 基本上，節點需要被 scaling 來處理流量的前面都可以放 LB：
-    1. client -> app
-        -> client -> LB -> app(s)
-    2. app -> cache
-        -> app -> LB -> cache(s)
-    3. app -> DB
-        -> app -> LB -> DB(s)
+    1. client -> app 變成 client -> LB -> app(s)
+    2. app -> cache 變成 app -> LB -> cache(s)
+    3. app -> DB 變成 app -> LB -> DB(s)
 - 當 cache 與 DB 皆有多台時，端看 DB 產品提供何種 replication 的機制，若為 master / slaves 的架構，則將讀取流量都分散到 read-only 的 slaves 上
 - 寫入的需求 (創建短網址與 update cache) 則由 master 負責做
 
